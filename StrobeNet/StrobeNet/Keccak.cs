@@ -1,6 +1,8 @@
 ﻿namespace StrobeNet
 {
-    public class Keccak
+    using System;
+
+    public static class Keccak
     {
         private static readonly ulong[] rc = new ulong[]
         {
@@ -30,7 +32,35 @@
             0x8000000080008008,
         };
 
-        public void KeccakF1600(ref ulong[] a, ref int nr)
+        private static ulong[] TransformArray(byte[] input)
+        {
+            var result = new ulong[input.Length / 8];
+            for (int i = 0; i < input.Length; i+=8)
+            {
+                result[i / 8] = BitConverter.ToUInt64(input, i);
+            }
+            return result;
+        }
+
+        private static byte[] TransformArrayBack(ulong[] input)
+        {
+            var result = new byte[input.Length * 8];
+            for (int i = 0; i < input.Length; i++)
+            {
+                var bytes = BitConverter.GetBytes(input[i]);
+                Array.Copy(bytes, 0, result, i * 8, bytes.Length);
+            }
+            return result;
+        }
+        
+        public static void KeccakF1600(ref byte[] a, int nr)
+        {
+            var transformed = TransformArray(a);
+            KeccakF1600(ref transformed, nr);
+            a = TransformArrayBack(transformed);
+        }
+
+        public static void KeccakF1600(ref ulong[] a, int nr)
         {
             // Implementation translated from Keccak-inplace.c
             // in the keccak reference code.
