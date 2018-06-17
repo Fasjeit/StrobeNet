@@ -16,7 +16,7 @@ non
 
 ToDo - add wiki
 
-See [Wiki](google.com) for thorough documentation. Here is an example usage:
+See [Wiki](https://github.com/Fasjeit/StrobeNet/wiki) for thorough documentation. Here is an example usage:
 
 ToDo - add example
 
