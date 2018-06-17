@@ -9,10 +9,10 @@
 
     public class Strobe : ICloneable
     {
-        ///// <summary>
-        ///// The size of the authentication tag used in AEAD functions
-        ///// </summary>
-        //private const int MacLen = 16;
+        /// <summary>
+        /// The size of the authentication tag used in AEAD functions
+        /// </summary>
+        private const int MacLen = 16;
 
         /// <summary>
         /// Used to avoid padding during the first permutation
@@ -70,10 +70,10 @@
         public ulong[] GetUint64State => Keccak.TransformArray(this.state);
 
         /// <summary>
-        /// InitStrobe allows you to initialize a new strobe instance with a customization string (that can be empty) and a security target (either 128 or 256).
+        /// Initialize a new strobe instance
         /// </summary>
-        /// <param name="customizationString"></param>
-        /// <param name="security"></param>
+        /// <param name="customizationString">customization string may be empty</param>
+        /// <param name="security">ecurity target (either 128 or 256)</param>
         public Strobe(string customizationString, int security)
         {
             // compute security and rate
@@ -98,31 +98,182 @@
             this.Operate(true, "AD", Encoding.UTF8.GetBytes(customizationString), 0, false);
         }
 
+        /// <summary>
+        /// Create Strobe instance for clone copy
+        /// </summary>
+        /// <param name="strobeR"></param>
         private Strobe(int strobeR)
         {
             this.strobeR = strobeR;
             this.initialized = true;
         }
 
-        // KEY inserts a key into the state.
-        // It also provides forward secrecy.
+
+        /// <summary>
+        /// Insert a key into the state
+        /// Provides forward secrecy.
+        /// </summary>
+        /// <param name="key">
+        /// Key to be added
+        /// </param>
         public void Key(byte[] key)
         {
             this.Operate(false, "KEY", key, 0, false);
         }
 
-        // PRF provides a hash of length `output_len` of all previous operations
-        // It can also be used to generate random numbers, it is forward secure.
+        /// <summary>
+        /// PRF provides a hash of all previous operations
+        /// It can also be used to generate random numbers, it is forward secure.
+        /// </summary>
+        /// <param name="outputLen">
+        /// Expected output length
+        /// </param>
         public byte[] Prf(int outputLen)
         {
-            return this.Operate(false, "PRF", new byte[] { }, outputLen, false);
+            return this.Operate(false, "PRF", null, outputLen, false);
         }
 
-        // AD allows you to authenticate Additional Data
-        // it should be followed by a Send_MAC or Recv_MAC in order to truly work
+        /// <summary>
+        /// Encrypt plaintext.
+        /// Should be followed by Send_MAC in order to protect its integrity
+        /// </summary>
+        /// <param name="meta">
+        /// Framing data.
+        /// </param>
+        /// <param name="plaintext">
+        /// Plaintext to be encrypted
+        /// </param>
+        public byte[] SendEncUnauthenticated(bool meta, byte[] plaintext)
+        {
+            return this.Operate(meta, "send_ENC", plaintext, 0, false);
+        }
+
+        ///  <summary>
+        ///  Recv_ENC_unauthenticated is used to decrypt some received ciphertext.
+        ///  it should be followed by Recv_MAC in order to protect its integrity
+        ///  `meta` is used for decrypting framing data.
+        ///  </summary>
+        ///  <param name="meta">
+        ///  Framing data.
+        ///  </param>
+        /// <param name="ciphertext">
+        /// Ciphertext to be decrypted
+        /// </param>
+        public byte[] RecvEncUnauthenticated(bool meta, byte[] ciphertext)
+        {
+            return this.Operate(meta, "recv_ENC", ciphertext, 0, false);
+        }
+
+        /// <summary>
+        /// Authenticate Additional Data
+        /// Should be followed by a Send_MAC or Recv_MAC in order to truly work
+        /// </summary>
+        /// <param name="meta">
+        /// Framing data.
+        /// </param>
+        /// <param name="additionalData">
+        /// Data to authenticate
+        /// </param>
         public void Ad(bool meta, byte[] additionalData)
         {
             this.Operate(meta, "AD", additionalData, 0, false);
+        }
+
+        /// <summary>
+        /// Send data in cleartext
+        /// </summary>
+        /// <param name="meta">
+        /// Framing data.
+        /// </param>
+        /// <param name="cleartext">
+        /// Cleartext to send
+        /// </param>
+        public byte[] SendClr(bool meta, byte[] cleartext)
+        {
+            return this.Operate(meta, "send_CLR", cleartext, 0, false);
+        }
+
+        /// <summary>
+        /// Produce an authentication tag.
+        /// </summary>
+        /// <param name="meta">
+        /// Framing data.
+        /// </param>
+        /// <param name="outputLength">
+        /// Expected tag length
+        /// </param>
+        public byte[] SendMac(bool meta, int outputLength)
+        {
+            return this.Operate(meta, "send_MAC", null, outputLength, false);
+        }
+
+        /// <summary>
+        /// Recv_MAC allows you to verify a received authentication tag.
+        /// </summary>
+        /// <param name="meta">
+        /// Framing data.
+        /// </param>
+        /// <param name="mac">
+        /// Tag to verufy
+        /// </param>
+        public bool RecvMac(bool meta, byte[] mac)
+        {
+            return this.Operate(meta, "recv_MAC", mac, 0, false)[0] == 0;
+        }
+        /// <summary>
+        /// Introduce forward secrecy in a protocol.
+        /// </summary>
+        /// <param name="length">
+        /// Expected length
+        /// </param>
+        public void Ratchet(int length)
+        {
+            this.Operate(false, "RATCHET", null, length, false);
+        }
+
+        /// <summary>
+        /// Encrypt data and authenticate additional data
+        /// </summary>
+        /// <param name="plaintext">
+        /// Data to be encrypted and authenticated
+        /// </param>
+        /// <param name="ad">
+        /// Additinal data to be authenticated
+        /// </param>
+        public byte[] SendAead(byte[] plaintext, byte[] ad)
+        {
+            var ciphertext = this.SendEncUnauthenticated(false, plaintext);
+            this.Ad(false, ad);
+            ciphertext = ciphertext.Concat(this.SendMac(false, Strobe.MacLen)).ToArray();
+            return ciphertext;
+        }
+
+        /// <summary>
+        /// Decrypt data and authenticate additional data
+        /// It is similar to AES-GCM.
+        /// </summary>
+        /// <param name="ciphertext">
+        /// Ciphertext to be verified and decrypted 
+        /// </param>
+        /// <param name="ad">
+        /// Additinal auth data to be verified
+        /// </param>
+        /// <param name="plaintext">
+        /// Resulting plaintext
+        /// </param>
+        public bool RecvAead(byte[] ciphertext, byte[] ad, out byte[] plaintext)
+        {
+            if (ciphertext.Length < Strobe.MacLen)
+            {
+                plaintext = null;
+                return false;
+            }
+
+            var messageLength = ciphertext.Length - Strobe.MacLen;
+            plaintext = this.RecvEncUnauthenticated(false, ciphertext.Take(messageLength).ToArray());
+
+            this.Ad(false, ad);
+            return this.RecvMac(false, ciphertext.Skip(messageLength).ToArray());
         }
 
         /// <summary>
