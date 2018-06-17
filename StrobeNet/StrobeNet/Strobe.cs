@@ -5,6 +5,8 @@
     using System.Linq;
     using System.Text;
 
+    using StrobeNet.Extensions;
+
     public class Strobe : ICloneable
     {
         ///// <summary>
@@ -320,7 +322,7 @@
         /// <returns></returns>
         public string DebugPrintState()
         {
-            return BitConverter.ToString(this.state).Replace("-", "");
+            return this.state.ToHexString();
         }
 
         private enum Role
@@ -328,17 +330,17 @@
             /// <summary>
             /// Set if we send the first transport message
             /// </summary>
-            Initiator,
+            Initiator = 0,
 
             /// <summary>
             /// Set if we receive the first transport message
             /// </summary>
-            Responder,
+            Responder = 1,
 
             /// <summary>
             /// starting value
             /// </summary>
-            None,
+            None = 2,
         }
 
         [Flags]

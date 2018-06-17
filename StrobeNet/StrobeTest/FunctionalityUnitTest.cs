@@ -6,6 +6,8 @@ namespace StrobeTest
 {
     using System.Text;
 
+    using StrobeNet.Extensions;
+
     public class FunctionalityUnitTest
     {
         [Fact]
@@ -18,18 +20,18 @@ namespace StrobeTest
 
             s1.Operate(false, "AD", Encoding.ASCII.GetBytes(message), 0, false);
             var state1 = s1.DebugPrintState();
-            var out1 = BitConverter.ToString(s1.Prf(32)).Replace("-", "");
+            var out1 = s1.Prf(32).ToHexString();
             var state12 = s1.DebugPrintState();
 
             s2.Operate(false, "AD", Encoding.ASCII.GetBytes(message), 0, false);
             var state2 = s2.DebugPrintState();
-            var out2 = BitConverter.ToString(s2.Prf(32)).Replace("-", "");
+            var out2 = s2.Prf(32).ToHexString();
             var state22 = s2.DebugPrintState();
 
             System.Diagnostics.Debug.WriteLine(out1);
             System.Diagnostics.Debug.WriteLine(out2);
 
-            if (out1 != out2)
+            if (out1 != out2 || state1 != state2 || state12 != state22)
             {
                 throw new Exception("strobe cannot stream correctly");
             }
@@ -46,11 +48,11 @@ namespace StrobeTest
             var s2 = s1.Clone() as Strobe;
 
             s1.Operate(false, "AD", Encoding.ASCII.GetBytes(fullmessage), 0, false);
-            var out1 =  BitConverter.ToString(s1.Prf(32)).Replace("-", "");
+            var out1 = s1.Prf(32).ToHexString();
 
             s2.Operate(false, "AD", Encoding.ASCII.GetBytes(message1), 0, false);
             s2.Operate(false, "AD", Encoding.ASCII.GetBytes(message2), 0, true);
-            var out2 = BitConverter.ToString(s2.Prf(32)).Replace("-", "");
+            var out2 = s2.Prf(32).ToHexString();
 
             System.Diagnostics.Debug.WriteLine(out1);
             System.Diagnostics.Debug.WriteLine(out2);
@@ -89,33 +91,5 @@ namespace StrobeTest
                 throw new Exception("this is not working");
             }
         }
-
-        //[Fact]
-        //public void TestStream2Py()
-        //{
-        //    var s = new StrobePy(Encoding.UTF8.GetBytes("custom string number 2, that's a pretty long string"), 128);
-        //    var key = new byte[] { 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1 };
-        //    s.Operate("KEY", key, false);
-        //    s.Operate("KEY", key, true);
-        //    var message = Encoding.UTF8.GetBytes(("hello, how are you good sir? ????"));
-        //    s.Operate("AD", message, false);
-        //    s.Operate("AD", message, true);
-        //    var r = s.Operate("AD", message, false);
-        //    Console.WriteLine(BitConverter.ToString(r).Replace("-", ""));
-        //    Console.WriteLine(s.DebugPrintState());
-        //}
-
-
-        //public Tuple<Strobe, Operation> DebugInit(string customString, int security)
-        //{
-        //    var s = new Strobe(customString, security);
-        //    var op = new Operation();
-        //    op.OpName = "init";
-        //    op.OpCustomString = customString;
-        //    op.OpSecurity = 128;
-        //    op.OpStateAfter = s.DebugPrintState();
-
-        //    return new Tuple<Strobe, Operation>(s, op);
-        //}
     }
 }

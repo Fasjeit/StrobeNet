@@ -4,7 +4,7 @@
 
     public static class Keccak
     {
-        private static readonly ulong[] rc = new ulong[]
+        private static readonly ulong[] Rc = new ulong[]
         {
             0x0000000000000001,
             0x0000000000008082,
@@ -55,9 +55,9 @@
         
         public static void KeccakF1600(ref byte[] a, int nr)
         {
-            var transformed = TransformArray(a);
-            KeccakF1600(ref transformed, nr);
-            a = TransformArrayBack(transformed);
+            var transformed = Keccak.TransformArray(a);
+            Keccak.KeccakF1600(ref transformed, nr);
+            a = Keccak.TransformArrayBack(transformed);
         }
 
         public static void KeccakF1600(ref ulong[] a, int nr)
@@ -95,7 +95,7 @@
                     bc3 = t << 21 | t >> (64 - 21);
                     t = a[24] ^ d4;
                     bc4 = t << 14 | t >> (64 - 14);
-                    a[0] = bc0 ^ (bc2 &~ bc1) ^ rc[i];
+                    a[0] = bc0 ^ (bc2 &~ bc1) ^ Keccak.Rc[i];
                     a[6] = bc1 ^ (bc3 &~ bc2);
                     a[12] = bc2 ^ (bc4 &~ bc3);
                     a[18] = bc3 ^ (bc0 &~ bc4);
@@ -189,7 +189,7 @@
                     bc3 = t << 21 | t >> (64 - 21);
                     t = a[14] ^ d4;
                     bc4 = t << 14 | t >> (64 - 14);
-                    a[0] = bc0 ^ (bc2 &~ bc1) ^ rc[i + 1];
+                    a[0] = bc0 ^ (bc2 &~ bc1) ^ Keccak.Rc[i + 1];
                     a[16] = bc1 ^ (bc3 &~ bc2);
                     a[7] = bc2 ^ (bc4 &~ bc3);
                     a[23] = bc3 ^ (bc0 &~ bc4);
@@ -281,7 +281,7 @@
                     bc3 = t << 21 | t >> (64 - 21);
                     t = a[19] ^ d4;
                     bc4 = t << 14 | t >> (64 - 14);
-                    a[0] = bc0 ^ (bc2 &~ bc1) ^ rc[i + 2];
+                    a[0] = bc0 ^ (bc2 &~ bc1) ^ Keccak.Rc[i + 2];
                     a[11] = bc1 ^ (bc3 &~ bc2);
                     a[22] = bc2 ^ (bc4 &~ bc3);
                     a[8] = bc3 ^ (bc0 &~ bc4);
@@ -372,7 +372,7 @@
                     bc3 = t << 21 | t >> (64 - 21);
                     t = a[4] ^ d4;
                     bc4 = t << 14 | t >> (64 - 14);
-                    a[0] = bc0 ^ (bc2 &~ bc1) ^ rc[i + 3];
+                    a[0] = bc0 ^ (bc2 &~ bc1) ^ Keccak.Rc[i + 3];
                     a[1] = bc1 ^ (bc3 &~ bc2);
                     a[2] = bc2 ^ (bc4 &~ bc3);
                     a[3] = bc3 ^ (bc0 &~ bc4);
