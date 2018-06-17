@@ -1,6 +1,6 @@
 # StrobeNet
 
-This repository contains an implementation of the [Strobe protocol framework](https://strobe.sourceforge.io/). See [this David Wong's blogpost](https://www.cryptologie.net/article/416/the-strobe-protocol-framework/) for an explanation of what is the framework.
+This repository contains an .NET Core implementation of the [Strobe protocol framework](https://strobe.sourceforge.io/). See [this David Wong's blogpost](https://www.cryptologie.net/article/416/the-strobe-protocol-framework/) for an explanation of what is the framework.
 
 **The implementation of Strobe has not been thoroughly tested. Do not use this in production**.
 
