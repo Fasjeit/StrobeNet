@@ -20,7 +20,7 @@ ToDo - add wiki
 
 See [Wiki](https://github.com/Fasjeit/StrobeNet/wiki) for thorough documentation. Here is an example usage:
 
-```
+```C#
 namespace Samples
 {
     using System;
