@@ -152,9 +152,8 @@
         }
 
         ///  <summary>
-        ///  Recv_ENC_unauthenticated is used to decrypt some received ciphertext.
+        ///  Decrypt some received ciphertext.
         ///  it should be followed by Recv_MAC in order to protect its integrity
-        ///  `meta` is used for decrypting framing data.
         ///  </summary>
         ///  <param name="meta">
         ///  Framing data.
@@ -211,7 +210,7 @@
         }
 
         /// <summary>
-        /// Recv_MAC allows you to verify a received authentication tag.
+        /// Allows you to verify a received authentication tag.
         /// </summary>
         /// <param name="meta">
         /// Framing data.
