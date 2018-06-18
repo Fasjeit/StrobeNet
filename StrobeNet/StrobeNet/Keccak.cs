@@ -32,7 +32,7 @@
             0x8000000080008008,
         };
 
-        public static ulong[] TransformArray(byte[] input)
+        internal static ulong[] TransformArray(byte[] input)
         {
             var result = new ulong[input.Length / 8];
             for (int i = 0; i < input.Length; i+=8)
@@ -42,7 +42,7 @@
             return result;
         }
 
-        public static byte[] TransformArrayBack(ulong[] input)
+        internal static byte[] TransformArrayBack(ulong[] input)
         {
             var result = new byte[input.Length * 8];
             for (int i = 0; i < input.Length; i++)

@@ -67,7 +67,7 @@
         /// <summary>
         /// Get current state
         /// </summary>
-        public ulong[] GetUint64State => Keccak.TransformArray(this.state);
+        internal ulong[] GetUint64State => Keccak.TransformArray(this.state);
 
         /// <summary>
         /// Initialize a new strobe instance
