@@ -52,7 +52,12 @@
             }
             return result;
         }
-        
+
+        /// <summary>
+        /// Perform KeccakF1600 permutation
+        /// </summary>
+        /// <param name="a">Input array</param>
+        /// <param name="nr">Number of rounds</param>
         public static void KeccakF1600(ref byte[] a, int nr)
         {
             var transformed = Keccak.TransformArray(a);
@@ -60,6 +65,11 @@
             a = Keccak.TransformArrayBack(transformed);
         }
 
+        /// <summary>
+        /// Perform KeccakF1600 permutation
+        /// </summary>
+        /// <param name="a">Input array</param>
+        /// <param name="nr">Number of rounds</param>
         public static void KeccakF1600(ref ulong[] a, int nr)
         {
             // Implementation translated from Keccak-inplace.c

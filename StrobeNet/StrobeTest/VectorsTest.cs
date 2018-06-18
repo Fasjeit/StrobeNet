@@ -89,7 +89,7 @@
 
                 var result = strobe.Operate(
                     operation.Meta ?? false,
-                    operation.Name,
+                    operation.GetStrobeOperation(),
                     operation.InputData?.ToByteArray(),
                     operation.InputLength,
                     operation.Stream ?? false);

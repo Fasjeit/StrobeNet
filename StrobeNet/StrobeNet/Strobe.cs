@@ -19,19 +19,22 @@
         /// </summary>
         private readonly bool initialized;
 
-        private readonly Dictionary<string, Flag> operationMap =
-            new Dictionary<string, Flag>
+        /// <summary>
+        /// Operation - flag map
+        /// </summary>
+        private readonly Dictionary<Operation, Flag> operationMap =
+            new Dictionary<Operation, Flag>
                 {
-                    { "AD", Flag.FlagA },
-                    { "KEY", Flag.FlagA | Flag.FlagC },
-                    { "PRF", Flag.FlagI | Flag.FlagA | Flag.FlagC },
-                    { "send_CLR", Flag.FlagA | Flag.FlagT },
-                    { "recv_CLR", Flag.FlagI | Flag.FlagA | Flag.FlagT },
-                    { "send_ENC", Flag.FlagA | Flag.FlagC | Flag.FlagT },
-                    { "recv_ENC", Flag.FlagI | Flag.FlagA | Flag.FlagC | Flag.FlagT },
-                    { "send_MAC", Flag.FlagC | Flag.FlagT },
-                    { "recv_MAC", Flag.FlagI | Flag.FlagC | Flag.FlagT },
-                    { "RATCHET", Flag.FlagC }
+                    { Operation.Ad, Flag.FlagA },
+                    { Operation.Key, Flag.FlagA | Flag.FlagC },
+                    { Operation.Prf, Flag.FlagI | Flag.FlagA | Flag.FlagC },
+                    { Operation.SendClr, Flag.FlagA | Flag.FlagT },
+                    { Operation.RecvClr, Flag.FlagI | Flag.FlagA | Flag.FlagT },
+                    { Operation.SendEnc, Flag.FlagA | Flag.FlagC | Flag.FlagT },
+                    { Operation.RecvEnc, Flag.FlagI | Flag.FlagA | Flag.FlagC | Flag.FlagT },
+                    { Operation.SendMac, Flag.FlagC | Flag.FlagT },
+                    { Operation.RecvMac, Flag.FlagI | Flag.FlagC | Flag.FlagT },
+                    { Operation.Ratchet, Flag.FlagC }
                 };
 
         /// <summary>
@@ -95,7 +98,7 @@
             this.Duplex(domain, false, false, true);
 
             this.initialized = true;
-            this.Operate(true, "AD", Encoding.UTF8.GetBytes(customizationString), 0, false);
+            this.Operate(true, Operation.Ad, Encoding.UTF8.GetBytes(customizationString), 0, false);
         }
 
         /// <summary>
@@ -118,7 +121,7 @@
         /// </param>
         public void Key(byte[] key)
         {
-            this.Operate(false, "KEY", key, 0, false);
+            this.Operate(false, Operation.Key, key, 0, false);
         }
 
         /// <summary>
@@ -130,7 +133,7 @@
         /// </param>
         public byte[] Prf(int outputLen)
         {
-            return this.Operate(false, "PRF", null, outputLen, false);
+            return this.Operate(false, Operation.Prf, null, outputLen, false);
         }
 
         /// <summary>
@@ -145,7 +148,7 @@
         /// </param>
         public byte[] SendEncUnauthenticated(bool meta, byte[] plaintext)
         {
-            return this.Operate(meta, "send_ENC", plaintext, 0, false);
+            return this.Operate(meta, Operation.SendEnc, plaintext, 0, false);
         }
 
         ///  <summary>
@@ -161,7 +164,7 @@
         /// </param>
         public byte[] RecvEncUnauthenticated(bool meta, byte[] ciphertext)
         {
-            return this.Operate(meta, "recv_ENC", ciphertext, 0, false);
+            return this.Operate(meta, Operation.RecvEnc, ciphertext, 0, false);
         }
 
         /// <summary>
@@ -176,7 +179,7 @@
         /// </param>
         public void Ad(bool meta, byte[] additionalData)
         {
-            this.Operate(meta, "AD", additionalData, 0, false);
+            this.Operate(meta, Operation.Ad, additionalData, 0, false);
         }
 
         /// <summary>
@@ -190,7 +193,7 @@
         /// </param>
         public byte[] SendClr(bool meta, byte[] cleartext)
         {
-            return this.Operate(meta, "send_CLR", cleartext, 0, false);
+            return this.Operate(meta, Operation.SendClr, cleartext, 0, false);
         }
 
         /// <summary>
@@ -204,7 +207,7 @@
         /// </param>
         public byte[] SendMac(bool meta, int outputLength)
         {
-            return this.Operate(meta, "send_MAC", null, outputLength, false);
+            return this.Operate(meta, Operation.SendMac, null, outputLength, false);
         }
 
         /// <summary>
@@ -218,7 +221,7 @@
         /// </param>
         public bool RecvMac(bool meta, byte[] mac)
         {
-            return this.Operate(meta, "recv_MAC", mac, 0, false)[0] == 0;
+            return this.Operate(meta, Operation.RecvMac, mac, 0, false)[0] == 0;
         }
         /// <summary>
         /// Introduce forward secrecy in a protocol.
@@ -228,7 +231,7 @@
         /// </param>
         public void Ratchet(int length)
         {
-            this.Operate(false, "RATCHET", null, length, false);
+            this.Operate(false, Operation.Ratchet, null, length, false);
         }
 
         /// <summary>
@@ -293,15 +296,14 @@
             return result;
         }
 
-    /// <summary>
-    /// Operate runs an operation (see OperationMap for a list of operations).
-    /// For operations that only require a length, provide the length via the
-    /// length argument with an empty slice []byte{}. For other operations provide
-    /// a zero length.
-    /// Result is always retrieved through the return value. For boolean results,
-    /// check that the first index is 0 for true, 1 for false.
-    /// </summary>
-    public byte[] Operate(bool meta, string operation, byte[] dataConst, int length, bool more)
+        /// <summary>
+        /// Operate runs an operation
+        /// For operations that only require a length, provide the length via the
+        /// length argument. For other operations provide a zero length.
+        /// Result is always retrieved through the return value. For boolean results,
+        /// check that the first index is 0 for true, 1 for false.
+        /// </summary>
+        public byte[] Operate(bool meta, Operation operation, byte[] dataConst, int length, bool more)
         {
             // operation is valid?
             if (!this.operationMap.TryGetValue(operation, out var flags))
@@ -474,6 +476,20 @@
         public string DebugPrintState()
         {
             return this.state.ToHexString();
+        }
+
+        public enum Operation
+        {
+            Ad,
+            Key,
+            Prf,
+            SendClr,
+            RecvClr,
+            SendEnc,
+            RecvEnc,
+            SendMac,
+            RecvMac,
+            Ratchet,
         }
 
         private enum Role
