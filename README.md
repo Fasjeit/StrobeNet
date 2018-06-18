@@ -50,4 +50,4 @@ namespace Samples
 ## Roadmap
 
 * Implement API test
-* Add wiki for documentation
+* Clean-up documentation text
