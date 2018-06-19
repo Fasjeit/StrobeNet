@@ -46,4 +46,3 @@ namespace Samples
 ## Roadmap
 
 * Implement API test
-* Clean-up documentation text
