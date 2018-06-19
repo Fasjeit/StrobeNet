@@ -46,3 +46,5 @@ namespace Samples
 ## Roadmap
 
 * Implement API test
+* Move enum to own class and create doc for it
+* Update Packet + wiki
