@@ -2,6 +2,9 @@
 {
     using System;
 
+    /// <summary>
+    /// Implementation of KeccakF1600 permutation 
+    /// </summary>
     public static class Keccak
     {
         private static readonly ulong[] Rc = new ulong[]

@@ -7,6 +7,9 @@
 
     using StrobeNet.Extensions;
 
+    /// <summary>
+    /// Strobe instance
+    /// </summary>
     public class Strobe : ICloneable
     {
         /// <summary>
