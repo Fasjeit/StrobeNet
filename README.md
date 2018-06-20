@@ -1,22 +1,28 @@
 # StrobeNet
 
-This repository contains an .NET Core implementation of the [Strobe protocol framework](https://strobe.sourceforge.io/). See [this David Wong's blogpost](https://www.cryptologie.net/article/416/the-strobe-protocol-framework/) for an explanation of what is the framework.
+This repository contains an .NET implementation of the [Strobe protocol framework](https://strobe.sourceforge.io/). See [this David Wong's blogpost](https://www.cryptologie.net/article/416/the-strobe-protocol-framework/) for an explanation of what is the framework.
 
 **The implementation of Strobe has not been thoroughly tested. Do not use this in production**.
 
-This implementation is adaptation of [StrobeGo by Davin Wong](https://github.com/mimoo/StrobeGo) and [strobe python reference code](https://sourceforge.net/p/strobe/code) for .NET platform.
+This implementation is adaptation of [StrobeGo by Davin Wong](https://github.com/mimoo/StrobeGo) and [Strobe python reference code](https://sourceforge.net/p/strobe/code) for .NET platform.
 
 ## Install
 
 Install [NuGet packet](https://www.nuget.org/packages/StrobeNet/):
 
+dotnet core
 ```
 dotnet add package StrobeNet
 ```
 
+.NET Framework
+```
+Install-Package StrobeNet
+```
+
 ## Usage
 
-See [Wiki](https://github.com/Fasjeit/StrobeNet/wiki) for thorough documentation. Here is an example usage:
+See [Wiki](https://github.com/Fasjeit/StrobeNet/wiki) for documentation. Here is an example usage:
 
 ```C#
 namespace Samples
@@ -46,5 +52,3 @@ namespace Samples
 ## Roadmap
 
 * Implement API test
-* Move enum to own class and create doc for it
-* Update Packet + wiki
