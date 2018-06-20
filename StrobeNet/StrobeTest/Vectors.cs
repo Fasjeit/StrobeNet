@@ -4,6 +4,7 @@
     using System.Collections.Generic;
 
     using StrobeNet;
+    using StrobeNet.Enums;
 
     internal class Vectors
     {
@@ -14,23 +15,23 @@
     {
         public string Name { get; set; }
 
-        public List<Operation> Operations { get; set; }
+        public List<OperationProperties> Operations { get; set; }
 
-        internal class Operation
+        internal class OperationProperties
         {
-            private readonly Dictionary<string, Strobe.Operation> vectorOperationMap =
-                new Dictionary<string, Strobe.Operation>()
+            private readonly Dictionary<string, Operation> vectorOperationMap =
+                new Dictionary<string, Operation>()
                     {
-                        { "AD", Strobe.Operation.Ad },
-                        { "KEY", Strobe.Operation.Key },
-                        { "PRF", Strobe.Operation.Prf },
-                        { "send_CLR", Strobe.Operation.SendClr },
-                        { "recv_CLR", Strobe.Operation.RecvClr },
-                        { "send_ENC", Strobe.Operation.SendEnc },
-                        { "recv_ENC", Strobe.Operation.RecvEnc },
-                        { "send_MAC", Strobe.Operation.SendMac },
-                        { "recv_MAC", Strobe.Operation.RecvMac },
-                        { "RATCHET", Strobe.Operation.Ratchet }
+                        { "AD", Operation.Ad },
+                        { "KEY", Operation.Key },
+                        { "PRF", Operation.Prf },
+                        { "send_CLR", Operation.SendClr },
+                        { "recv_CLR", Operation.RecvClr },
+                        { "send_ENC", Operation.SendEnc },
+                        { "recv_ENC", Operation.RecvEnc },
+                        { "send_MAC", Operation.SendMac },
+                        { "recv_MAC", Operation.RecvMac },
+                        { "RATCHET", Operation.Ratchet }
                     };
 
 
@@ -52,7 +53,7 @@
 
             public int InputLength { get; set; }
 
-            public Strobe.Operation GetStrobeOperation()
+            public Operation GetStrobeOperation()
             {
                 if (!this.vectorOperationMap.TryGetValue(this.Name, out var operation))
                 {

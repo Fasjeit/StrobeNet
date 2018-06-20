@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Text;
 
+    using StrobeNet.Enums;
     using StrobeNet.Extensions;
 
     /// <summary>
@@ -116,7 +117,7 @@
 
 
         /// <summary>
-        /// Insert a key into the state
+        /// Insert a key into the state.
         /// Provides forward secrecy.
         /// </summary>
         /// <param name="key">
@@ -128,7 +129,7 @@
         }
 
         /// <summary>
-        /// PRF provides a hash of all previous operations
+        /// PRF provides a hash of all previous operations.
         /// It can also be used to generate random numbers, it is forward secure.
         /// </summary>
         /// <param name="outputLen">
@@ -141,7 +142,7 @@
 
         /// <summary>
         /// Encrypt plaintext.
-        /// Should be followed by Send_MAC in order to protect its integrity
+        /// Should be followed by SendMac in order to protect its integrity
         /// </summary>
         /// <param name="meta">
         /// Framing data.
@@ -156,7 +157,7 @@
 
         ///  <summary>
         ///  Decrypt some received ciphertext.
-        ///  it should be followed by Recv_MAC in order to protect its integrity
+        ///  it should be followed by RecvMac in order to protect its integrity
         ///  </summary>
         ///  <param name="meta">
         ///  Framing data.
@@ -170,8 +171,8 @@
         }
 
         /// <summary>
-        /// Authenticate Additional Data
-        /// Should be followed by a Send_MAC or Recv_MAC in order to truly work
+        /// Authenticate Additional Data.
+        /// Should be followed by a SendMAc or RecvMac in order to truly work
         /// </summary>
         /// <param name="meta">
         /// Framing data.
@@ -199,6 +200,20 @@
         }
 
         /// <summary>
+        /// Receive data in cleartext
+        /// </summary>
+        /// <param name="meta">
+        /// Framing data.
+        /// </param>
+        /// <param name="cleartext">
+        /// Cleartext to send
+        /// </param>
+        public byte[] RecvClr(bool meta, byte[] cleartext)
+        {
+            return this.Operate(meta, Operation.RecvClr, cleartext, 0, false);
+        }
+
+        /// <summary>
         /// Produce an authentication tag.
         /// </summary>
         /// <param name="meta">
@@ -213,7 +228,7 @@
         }
 
         /// <summary>
-        /// Allows you to verify a received authentication tag.
+        /// Verify a received authentication tag.
         /// </summary>
         /// <param name="meta">
         /// Framing data.
@@ -336,7 +351,7 @@
             {
                 if (length != 0)
                 {
-                    throw new Exception("Output length must be zero except for PRF, send_MAC and RATCHET operations");
+                    throw new Exception("Output length must be zero except for PRF, SendMac and RATCHET operations");
                 }
 
                 data = dataConst;
@@ -478,20 +493,6 @@
         public string DebugPrintState()
         {
             return this.state.ToHexString();
-        }
-
-        public enum Operation
-        {
-            Ad,
-            Key,
-            Prf,
-            SendClr,
-            RecvClr,
-            SendEnc,
-            RecvEnc,
-            SendMac,
-            RecvMac,
-            Ratchet,
         }
 
         private enum Role
