@@ -16,8 +16,6 @@ dotnet add package StrobeNet
 
 ## Usage
 
-ToDo - add wiki
-
 See [Wiki](https://github.com/Fasjeit/StrobeNet/wiki) for thorough documentation. Here is an example usage:
 
 ```C#
@@ -35,11 +33,9 @@ namespace Samples
             // Create strobe object, setting init string and security
             var strobe = new Strobe("MyStrobe", 128);
 
-            // Authenticating message
             var messageByte = Encoding.ASCII.GetBytes("Hello gentlemens");
             strobe.Ad(false, messageByte);
 
-            // Get Prf output
             var prfBytes = strobe.Prf(16);
             Console.WriteLine(BitConverter.ToString(prfBytes).Replace("-", ""));
         }
@@ -50,4 +46,5 @@ namespace Samples
 ## Roadmap
 
 * Implement API test
-* Clean-up documentation text
+* Move enum to own class and create doc for it
+* Update Packet + wiki
