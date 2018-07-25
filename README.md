@@ -1,5 +1,7 @@
 # StrobeNet
 
+[![Build Status](https://travis-ci.org/Fasjeit/StrobeNet.svg?branch=master)](https://travis-ci.org/Fasjeit/StrobeNet)
+
 This repository contains an .NET implementation of the [Strobe protocol framework](https://strobe.sourceforge.io/). See [this David Wong's blogpost](https://www.cryptologie.net/article/416/the-strobe-protocol-framework/) for an explanation of what is the framework.
 
 **The implementation of Strobe has not been thoroughly tested. Do not use this in production**.
