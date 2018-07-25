@@ -5,6 +5,6 @@ mono: none
 dotnet: 2.0.3
 solution: ./StrobeNet/StrobeNet.sln
 before_script:
-  - dotnet restore
+  - dotnet restore ./StrobeNet/
 script:    
   - dotnet test ./StrobeNet/StrobeTest/StrobeTest.csproj -c Release -f netcoreapp2.0
