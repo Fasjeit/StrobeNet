@@ -41,7 +41,7 @@ namespace Samples
             // Create strobe object, setting init string and security
             var strobe = new Strobe("MyStrobe", 128);
 
-            var messageByte = Encoding.ASCII.GetBytes("Hello gentlemens");
+            var messageByte = Encoding.ASCII.GetBytes("Hello gentlemen");
             strobe.Ad(false, messageByte);
 
             var prfBytes = strobe.Prf(16);
@@ -53,5 +53,7 @@ namespace Samples
 
 ## Roadmap
 
+* xml on operation enum
 * Implement API test
+* Samples
 * StreamBuffer using
