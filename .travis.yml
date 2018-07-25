@@ -1,0 +1,9 @@
+language: csharp  
+sudo: required  
+mono: none
+dotnet: 2.0.0-preview2-006497
+solution: ./StrobeNet/StrobeNet.sln
+before_script:
+  - dotnet restore
+script:    
+  - dotnet test ./StrobeNet/StrobeTest/StrobeTest.csproj -c Release -f netcoreapp2.0
