@@ -3,9 +3,11 @@
     using System;
     using System.Linq;
 
+    /// <summary>
+    /// Array convert extensions
+    /// </summary>
     public static class Extensions
     {
-
         /// <summary>
         /// Converts hex string to byte array
         /// </summary>
