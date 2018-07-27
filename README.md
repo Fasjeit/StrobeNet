@@ -1,5 +1,7 @@
 # StrobeNet
 
+[![Build Status](https://travis-ci.org/Fasjeit/StrobeNet.svg?branch=master)](https://travis-ci.org/Fasjeit/StrobeNet)
+
 This repository contains an .NET implementation of the [Strobe protocol framework](https://strobe.sourceforge.io/). See [this David Wong's blogpost](https://www.cryptologie.net/article/416/the-strobe-protocol-framework/) for an explanation of what is the framework.
 
 **The implementation of Strobe has not been thoroughly tested. Do not use this in production**.
@@ -39,7 +41,7 @@ namespace Samples
             // Create strobe object, setting init string and security
             var strobe = new Strobe("MyStrobe", 128);
 
-            var messageByte = Encoding.ASCII.GetBytes("Hello gentlemens");
+            var messageByte = Encoding.ASCII.GetBytes("Hello gentlemen");
             strobe.Ad(false, messageByte);
 
             var prfBytes = strobe.Prf(16);
@@ -51,5 +53,7 @@ namespace Samples
 
 ## Roadmap
 
+* xml on operation enum
 * Implement API test
+* Samples
 * StreamBuffer using
