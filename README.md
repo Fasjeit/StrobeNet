@@ -1,16 +1,16 @@
 # StrobeNet
 
-Linux build:
-[![Travis CI build status](https://travis-ci.org/Fasjeit/StrobeNet.svg?branch=master)](https://travis-ci.org/Fasjeit/StrobeNet)
-
-Windows build:
-[![AppVeyor build status](https://ci.appveyor.com/api/projects/status/dxkj5bnbus3iq4so?svg=true)](https://ci.appveyor.com/project/Fasjeit/strobenet)
-
 This repository contains an .NET implementation of the [Strobe protocol framework](https://strobe.sourceforge.io/). See [this David Wong's blogpost](https://www.cryptologie.net/article/416/the-strobe-protocol-framework/) for an explanation of what is the framework.
 
 **The implementation of Strobe has not been thoroughly tested. Do not use this in production**.
 
 This implementation is adaptation of [StrobeGo by Davin Wong](https://github.com/mimoo/StrobeGo) and [Strobe python reference code](https://sourceforge.net/p/strobe/code) for .NET platform.
+
+### Build and Test Status:
+
+| Linux build: | [![Travis CI build status](https://travis-ci.org/Fasjeit/StrobeNet.svg?branch=master)](https://travis-ci.org/Fasjeit/StrobeNet) |
+|:---:|:---:|
+| Windows build: |  [![AppVeyor build status](https://ci.appveyor.com/api/projects/status/dxkj5bnbus3iq4so?svg=true)](https://ci.appveyor.com/project/Fasjeit/strobenet) |
 
 ## Install
 
