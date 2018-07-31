@@ -1,4 +1,4 @@
-version: '1.0.{build}'
+version: '0.0.2.3.{build}'
 image: Visual Studio 2017
 branches:
   only:
@@ -11,6 +11,7 @@ install:
 before_build:
   # Display .NET Core version
   - cmd: dotnet --version
+  - cmd: cd
   # Display minimal restore text
   - cmd: dotnet restore ./DiscoNet.sln --verbosity m
 build_script:
