@@ -57,7 +57,8 @@ namespace Samples
 
 ## Roadmap
 
-* xml on operation enum
+* xml comments on operation enum
+* coverity scan? https://scan.coverity.com/projects/fasjeit-strobenet/builds/new?tab=travis_ci
 * Implement API test
 * Samples
 * StreamBuffer using
