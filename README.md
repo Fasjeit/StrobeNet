@@ -58,6 +58,7 @@ namespace Samples
 ## Roadmap
 
 * xml comments on operation enum
+* remove folder, rename test project
 * coverity scan? https://scan.coverity.com/projects/fasjeit-strobenet/builds/new?tab=travis_ci
 * Implement API test
 * Samples
