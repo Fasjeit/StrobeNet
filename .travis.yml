@@ -7,7 +7,7 @@ solution: ./StrobeNet/StrobeNet.sln
 before_script:
   - dotnet restore ./StrobeNet/StrobeNet.sln
 script:    
-  - dotnet test ./StrobeNet/StrobeTest/StrobeTest.csproj -c Release -f netcoreapp2.0  
+  - dotnet test ./StrobeNet.Tests/StrobeNet.Tests.csproj -c Release -f netcoreapp2.0  
 notifications:
   email:
     on_success: never # default: change
