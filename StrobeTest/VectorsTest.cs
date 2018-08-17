@@ -1,4 +1,4 @@
-﻿namespace StrobeTest
+﻿namespace StrobeNet.Tests
 {
     using System;
     using System.IO;

@@ -1,13 +1,13 @@
-using System;
-using Xunit;
-using StrobeNet;
-
-namespace StrobeTest
+namespace StrobeNet.Tests
 {
+    using System;
     using System.Text;
 
+    using StrobeNet;
     using StrobeNet.Enums;
     using StrobeNet.Extensions;
+
+    using Xunit;
 
     public class FunctionalityUnitTest
     {

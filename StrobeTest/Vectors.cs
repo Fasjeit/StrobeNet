@@ -1,9 +1,8 @@
-﻿namespace StrobeTest
+﻿namespace StrobeNet.Tests
 {
     using System;
     using System.Collections.Generic;
 
-    using StrobeNet;
     using StrobeNet.Enums;
 
     internal class Vectors
