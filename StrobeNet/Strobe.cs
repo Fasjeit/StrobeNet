@@ -26,20 +26,19 @@
         /// <summary>
         /// Operation - flag map
         /// </summary>
-        private readonly Dictionary<Operation, Flag> operationMap =
-            new Dictionary<Operation, Flag>
-                {
-                    { Operation.Ad, Flag.FlagA },
-                    { Operation.Key, Flag.FlagA | Flag.FlagC },
-                    { Operation.Prf, Flag.FlagI | Flag.FlagA | Flag.FlagC },
-                    { Operation.SendClr, Flag.FlagA | Flag.FlagT },
-                    { Operation.RecvClr, Flag.FlagI | Flag.FlagA | Flag.FlagT },
-                    { Operation.SendEnc, Flag.FlagA | Flag.FlagC | Flag.FlagT },
-                    { Operation.RecvEnc, Flag.FlagI | Flag.FlagA | Flag.FlagC | Flag.FlagT },
-                    { Operation.SendMac, Flag.FlagC | Flag.FlagT },
-                    { Operation.RecvMac, Flag.FlagI | Flag.FlagC | Flag.FlagT },
-                    { Operation.Ratchet, Flag.FlagC }
-                };
+        private readonly Dictionary<Operation, Flag> operationMap = new Dictionary<Operation, Flag>
+        {
+            { Operation.Ad, Flag.FlagA },
+            { Operation.Key, Flag.FlagA | Flag.FlagC },
+            { Operation.Prf, Flag.FlagI | Flag.FlagA | Flag.FlagC },
+            { Operation.SendClr, Flag.FlagA | Flag.FlagT },
+            { Operation.RecvClr, Flag.FlagI | Flag.FlagA | Flag.FlagT },
+            { Operation.SendEnc, Flag.FlagA | Flag.FlagC | Flag.FlagT },
+            { Operation.RecvEnc, Flag.FlagI | Flag.FlagA | Flag.FlagC | Flag.FlagT },
+            { Operation.SendMac, Flag.FlagC | Flag.FlagT },
+            { Operation.RecvMac, Flag.FlagI | Flag.FlagC | Flag.FlagT },
+            { Operation.Ratchet, Flag.FlagC }
+        };
 
         /// <summary>
         /// Strobe R param
@@ -57,7 +56,7 @@
         private Role i0;
 
         /// <summary>
-        /// Curent position in storage
+        /// Current position in storage
         /// </summary>
         private byte pos;
 
@@ -79,8 +78,8 @@
         /// <summary>
         /// Initialize a new strobe instance
         /// </summary>
-        /// <param name="customizationString">customization string may be empty</param>
-        /// <param name="security">ecurity target (either 128 or 256)</param>
+        /// <param name="customizationString">Customization string may be empty</param>
+        /// <param name="security">Security target (either 128 or 256)</param>
         public Strobe(string customizationString, int security)
         {
             // compute security and rate
@@ -99,10 +98,11 @@
             var domain = new byte[] { 1, (byte)(this.strobeR + 2), 1, 0, 1, 12 * 8 };
             domain = domain.Concat(Encoding.UTF8.GetBytes("STROBEv1.0.2")).ToArray();
 
-            this.Duplex(domain, false, false, true);
+            this.Duplex(domain, 0, domain.Length, false, false, true);
 
             this.initialized = true;
-            this.Operate(true, Operation.Ad, Encoding.UTF8.GetBytes(customizationString), 0, false);
+            var operateBytes = Encoding.UTF8.GetBytes(customizationString);
+            this.Operate(true, Operation.Ad, operateBytes, 0, operateBytes.Length, 0, false);
         }
 
         /// <summary>
@@ -115,6 +115,19 @@
             this.initialized = true;
         }
 
+        /// <summary>
+        /// Get clone of current object
+        /// </summary>
+        /// <returns></returns>
+        public object Clone()
+        {
+            var result = new Strobe(this.strobeR)
+            {
+                curFlags = this.curFlags, i0 = this.i0, pos = this.pos, posBegin = this.posBegin
+            };
+            Array.Copy(this.state, 0, result.state, 0, this.state.Length);
+            return result;
+        }
 
         /// <summary>
         /// Insert a key into the state.
@@ -125,7 +138,21 @@
         /// </param>
         public void Key(byte[] key)
         {
-            this.Operate(false, Operation.Key, key, 0, false);
+            this.Key(key, 0, key.Length);
+        }
+
+        /// <summary>
+        /// Insert a key into the state.
+        /// Provides forward secrecy.
+        /// </summary>
+        /// <param name="key">
+        /// Key to be added
+        /// </param>
+        /// <param name="startIndex">Start index for reading from buffer</param>
+        /// <param name="count">Number of bytes to read</param>
+        public void Key(byte[] key, int startIndex, int count)
+        {
+            this.Operate(false, Operation.Key, key, startIndex, count, 0, false);
         }
 
         /// <summary>
@@ -137,7 +164,7 @@
         /// </param>
         public byte[] Prf(int outputLen)
         {
-            return this.Operate(false, Operation.Prf, null, outputLen, false);
+            return this.Operate(false, Operation.Prf, null, 0, 0, outputLen, false);
         }
 
         /// <summary>
@@ -152,22 +179,64 @@
         /// </param>
         public byte[] SendEncUnauthenticated(bool meta, byte[] plaintext)
         {
-            return this.Operate(meta, Operation.SendEnc, plaintext, 0, false);
+            return this.SendEncUnauthenticated(meta, plaintext, 0, plaintext.Length);
         }
 
-        ///  <summary>
-        ///  Decrypt some received ciphertext.
-        ///  it should be followed by RecvMac in order to protect its integrity
-        ///  </summary>
-        ///  <param name="meta">
-        ///  Framing data.
-        ///  </param>
+        /// <summary>
+        /// Encrypt plaintext.
+        /// Should be followed by SendMac in order to protect its integrity
+        /// </summary>
+        /// <param name="meta">
+        /// Framing data.
+        /// </param>
+        /// <param name="plaintext">
+        /// Plaintext to be encrypted
+        /// </param>
+        /// <param name="startIndex">
+        /// Start index for reading from buffer
+        /// </param>
+        /// <param name="count">
+        /// Number of bytes to read
+        /// </param>
+        public byte[] SendEncUnauthenticated(bool meta, byte[] plaintext, int startIndex, int count)
+        {
+            return this.Operate(meta, Operation.SendEnc, plaintext, startIndex, count, 0, false);
+        }
+
+        /// <summary>
+        /// Decrypt some received ciphertext.
+        /// it should be followed by RecvMac in order to protect its integrity
+        /// </summary>
+        /// <param name="meta">
+        /// Framing data.
+        /// </param>
         /// <param name="ciphertext">
         /// Ciphertext to be decrypted
         /// </param>
         public byte[] RecvEncUnauthenticated(bool meta, byte[] ciphertext)
         {
-            return this.Operate(meta, Operation.RecvEnc, ciphertext, 0, false);
+            return this.RecvEncUnauthenticated(meta, ciphertext, 0, ciphertext.Length);
+        }
+
+        /// <summary>
+        /// Decrypt some received ciphertext.
+        /// it should be followed by RecvMac in order to protect its integrity
+        /// </summary>
+        /// <param name="meta">
+        /// Framing data.
+        /// </param>
+        /// <param name="ciphertext">
+        /// Ciphertext to be decrypted
+        /// </param>
+        /// <param name="startIndex"
+        /// >Start index for reading from buffer
+        /// </param>
+        /// <param name="count">
+        /// Number of bytes to read
+        /// </param>
+        public byte[] RecvEncUnauthenticated(bool meta, byte[] ciphertext, int startIndex, int count)
+        {
+            return this.Operate(meta, Operation.RecvEnc, ciphertext, startIndex, count, 0, false);
         }
 
         /// <summary>
@@ -182,7 +251,28 @@
         /// </param>
         public void Ad(bool meta, byte[] additionalData)
         {
-            this.Operate(meta, Operation.Ad, additionalData, 0, false);
+            this.Ad(meta, additionalData, 0, additionalData.Length);
+        }
+
+        /// <summary>
+        /// Authenticate Additional Data.
+        /// Should be followed by a SendMAc or RecvMac in order to truly work
+        /// </summary>
+        /// <param name="meta">
+        /// Framing data.
+        /// </param>
+        /// <param name="additionalData">
+        /// Data to authenticate
+        /// </param>
+        /// <param name="startIndex">
+        /// Start index for reading from buffer
+        /// </param>
+        /// <param name="count">
+        /// Number of bytes to read
+        /// </param>
+        public void Ad(bool meta, byte[] additionalData, int startIndex, int count)
+        {
+            this.Operate(meta, Operation.Ad, additionalData, startIndex, count, 0, false);
         }
 
         /// <summary>
@@ -196,7 +286,27 @@
         /// </param>
         public byte[] SendClr(bool meta, byte[] cleartext)
         {
-            return this.Operate(meta, Operation.SendClr, cleartext, 0, false);
+            return this.SendClr(meta, cleartext, 0, cleartext.Length);
+        }
+
+        /// <summary>
+        /// Send data in cleartext
+        /// </summary>
+        /// <param name="meta">
+        /// Framing data.
+        /// </param>
+        /// <param name="cleartext">
+        /// Cleartext to send
+        /// </param>
+        /// <param name="startIndex">
+        /// Start index for reading from buffer
+        /// </param>
+        /// <param name="count">
+        /// Number of bytes to read
+        /// </param>
+        public byte[] SendClr(bool meta, byte[] cleartext, int startIndex, int count)
+        {
+            return this.Operate(meta, Operation.SendClr, cleartext, startIndex, count, 0, false);
         }
 
         /// <summary>
@@ -210,7 +320,27 @@
         /// </param>
         public byte[] RecvClr(bool meta, byte[] cleartext)
         {
-            return this.Operate(meta, Operation.RecvClr, cleartext, 0, false);
+            return this.RecvClr(meta, cleartext, 0, cleartext.Length);
+        }
+
+        /// <summary>
+        /// Receive data in cleartext
+        /// </summary>
+        /// <param name="meta">
+        /// Framing data.
+        /// </param>
+        /// <param name="cleartext">
+        /// Cleartext to send
+        /// </param>
+        /// <param name="startIdex">
+        /// Start index for reading from buffer
+        /// </param>
+        /// <param name="count">
+        /// Number of bytes to read
+        /// </param>
+        public byte[] RecvClr(bool meta, byte[] cleartext, int startIdex, int count)
+        {
+            return this.Operate(meta, Operation.RecvClr, cleartext, startIdex, count, 0, false);
         }
 
         /// <summary>
@@ -224,7 +354,7 @@
         /// </param>
         public byte[] SendMac(bool meta, int outputLength)
         {
-            return this.Operate(meta, Operation.SendMac, null, outputLength, false);
+            return this.Operate(meta, Operation.SendMac, null, 0, 0, outputLength, false);
         }
 
         /// <summary>
@@ -234,12 +364,33 @@
         /// Framing data.
         /// </param>
         /// <param name="mac">
-        /// Tag to verufy
+        /// Tag to verify
         /// </param>
         public bool RecvMac(bool meta, byte[] mac)
         {
-            return this.Operate(meta, Operation.RecvMac, mac, 0, false)[0] == 0;
+            return this.RecvMac(meta, mac, 0, mac.Length);
         }
+
+        /// <summary>
+        /// Verify a received authentication tag.
+        /// </summary>
+        /// <param name="meta">
+        /// Framing data.
+        /// </param>
+        /// <param name="mac">
+        /// Tag to verify
+        /// </param>
+        /// <param name="startIndex">
+        /// Start index for reading from buffer
+        /// </param>
+        /// <param name="count">
+        /// Number of bytes to read
+        /// </param>
+        public bool RecvMac(bool meta, byte[] mac, int startIndex, int count)
+        {
+            return this.Operate(meta, Operation.RecvMac, mac, startIndex, count, 0, false)[0] == 0;
+        }
+
         /// <summary>
         /// Introduce forward secrecy in a protocol.
         /// </summary>
@@ -248,7 +399,7 @@
         /// </param>
         public void Ratchet(int length)
         {
-            this.Operate(false, Operation.Ratchet, null, length, false);
+            this.Operate(false, Operation.Ratchet, null, 0, 0, length, false);
         }
 
         /// <summary>
@@ -258,13 +409,45 @@
         /// Data to be encrypted and authenticated
         /// </param>
         /// <param name="ad">
-        /// Additinal data to be authenticated
+        /// Additional data to be authenticated
         /// </param>
         public byte[] SendAead(byte[] plaintext, byte[] ad)
         {
-            var ciphertext = this.SendEncUnauthenticated(false, plaintext);
-            this.Ad(false, ad);
-            ciphertext = ciphertext.Concat(this.SendMac(false, Strobe.MacLen)).ToArray();
+            return this.SendAead(plaintext, 0, plaintext.Length, ad, 0, ad.Length);
+        }
+
+        /// <summary>
+        /// Encrypt data and authenticate additional data
+        /// </summary>
+        /// <param name="plaintext">
+        /// Data to be encrypted and authenticated
+        /// </param>
+        /// <param name="plaintextStartIndex">
+        /// Start index for reading from plaintext buffer
+        /// </param>
+        /// <param name="plaintextCount">
+        /// Number of plaintext bytes to read
+        /// </param>
+        /// <param name="ad">
+        /// Additional data to be authenticated
+        /// </param>
+        /// <param name="adStartIndex">
+        /// Start index for reading from AD buffer
+        /// </param>
+        /// <param name="adCOunt">
+        /// Number of AD bytes to read
+        /// </param>
+        public byte[] SendAead(
+            byte[] plaintext,
+            int plaintextStartIndex,
+            int plaintextCount,
+            byte[] ad,
+            int adStartIndex,
+            int adCOunt)
+        {
+            var ciphertext = this.SendEncUnauthenticated(false, plaintext, plaintextStartIndex, plaintextCount);
+            this.Ad(false, ad, adStartIndex, adCOunt);
+            ciphertext = ciphertext.Concat(this.SendMac(false, MacLen)).ToArray();
             return ciphertext;
         }
 
@@ -273,7 +456,7 @@
         /// It is similar to AES-GCM.
         /// </summary>
         /// <param name="ciphertext">
-        /// Ciphertext to be verified and decrypted 
+        /// Ciphertext to be verified and decrypted
         /// </param>
         /// <param name="ad">
         /// Additinal auth data to be verified
@@ -283,34 +466,54 @@
         /// </param>
         public bool RecvAead(byte[] ciphertext, byte[] ad, out byte[] plaintext)
         {
-            if (ciphertext.Length < Strobe.MacLen)
+            return this.RecvAead(ciphertext, 0, ciphertext.Length, ad, 0, ad.Length, out plaintext);
+        }
+
+        /// <summary>
+        /// Decrypt data and authenticate additional data
+        /// It is similar to AES-GCM.
+        /// </summary>
+        /// <param name="ciphertext">
+        /// Ciphertext to be verified and decrypted
+        /// </param>
+        /// <param name="ciphertextStartIndex">
+        /// Start index for reading from ciphertext buffe
+        /// r</param>
+        /// <param name="ciphertextCount">
+        /// Number of ciphertext bytes to read
+        /// </param>
+        /// <param name="ad">
+        /// Additional auth data to be verified
+        /// </param>
+        /// <param name="adStartIndex">
+        /// Start index for reading from AD buffer
+        /// </param>
+        /// <param name="adCount">
+        /// Number of AD bytes to read
+        /// </param>
+        /// <param name="plaintext">
+        /// Resulting plaintext
+        /// </param>
+        public bool RecvAead(
+            byte[] ciphertext,
+            int ciphertextStartIndex,
+            int ciphertextCount,
+            byte[] ad,
+            int adStartIndex,
+            int adCount,
+            out byte[] plaintext)
+        {
+            if (ciphertext.Length < MacLen)
             {
                 plaintext = null;
                 return false;
             }
 
-            var messageLength = ciphertext.Length - Strobe.MacLen;
-            plaintext = this.RecvEncUnauthenticated(false, ciphertext.Take(messageLength).ToArray());
+            var messageLength = ciphertext.Length - MacLen;
+            plaintext = this.RecvEncUnauthenticated(false, ciphertext, 0, messageLength);
 
-            this.Ad(false, ad);
-            return this.RecvMac(false, ciphertext.Skip(messageLength).ToArray());
-        }
-
-        /// <summary>
-        /// Get clone of curent object
-        /// </summary>
-        /// <returns></returns>
-        public object Clone()
-        {
-            var result = new Strobe(this.strobeR)
-                             {
-                                 curFlags = this.curFlags,
-                                 i0 = this.i0,
-                                 pos = this.pos,
-                                 posBegin = this.posBegin,
-                             };
-            Array.Copy(this.state, 0, result.state, 0, this.state.Length);
-            return result;
+            this.Ad(false, ad, adStartIndex, adCount);
+            return this.RecvMac(false, ciphertext, messageLength, MacLen);
         }
 
         /// <summary>
@@ -321,6 +524,25 @@
         /// check that the first index is 0 for true, 1 for false.
         /// </summary>
         public byte[] Operate(bool meta, Operation operation, byte[] dataConst, int length, bool more)
+        {
+            return this.Operate(meta, operation, dataConst, 0, dataConst?.Length ?? 0, length, more);
+        }
+
+        /// <summary>
+        /// Operate runs an operation
+        /// For operations that only require a length, provide the length via the
+        /// length argument. For other operations provide a zero length.
+        /// Result is always retrieved through the return value. For boolean results,
+        /// check that the first index is 0 for true, 1 for false.
+        /// </summary>
+        public byte[] Operate(
+            bool meta,
+            Operation operation,
+            byte[] dataConst,
+            int starIndex,
+            int count,
+            int length,
+            bool more)
         {
             // operation is valid?
             if (!this.operationMap.TryGetValue(operation, out var flags))
@@ -375,7 +597,9 @@
             var cAfter = (flags & (Flag.FlagC | Flag.FlagI | Flag.FlagT)) == (Flag.FlagC | Flag.FlagT);
             var cBefore = (flags & Flag.FlagC) != 0 && !cAfter;
 
-            var processed = this.Duplex(data, cBefore, cAfter, false);
+            // length should be zero for prf only, already checked this before
+            // if len!=0 then just use input count
+            var processed = this.Duplex(data, starIndex, length == 0 ? count : length, cBefore, cAfter, false);
 
             if ((flags & (Flag.FlagI | Flag.FlagA)) == (Flag.FlagI | Flag.FlagA))
             {
@@ -397,10 +621,7 @@
                 }
 
                 byte failures = 0;
-                foreach (var dataByte in processed)
-                {
-                    failures |= dataByte;
-                }
+                foreach (var dataByte in processed) failures |= dataByte;
 
                 return new[] { failures }; // 0 if correct, 1 if not
             }
@@ -425,11 +646,12 @@
             var oldBegin = this.posBegin;
             this.posBegin = (byte)(this.pos + 1);
             var forceF = (flags & (Flag.FlagC | Flag.FlagK)) != 0;
+            var data = new[] { oldBegin, (byte)flags };
 
-            this.Duplex(new[] { oldBegin, (byte)flags }, false, false, forceF);
+            this.Duplex(data, 0, data.Length, false, false, forceF);
         }
 
-        private byte[] Duplex(byte[] data, bool cbefore, bool cafter, bool forceF)
+        private byte[] Duplex(byte[] data, int startIndex, int count, bool cbefore, bool cafter, bool forceF)
         {
             if (cbefore && cafter)
             {
@@ -437,7 +659,9 @@
             }
 
             // Copy data
-            var newData = (byte[])data.Clone();
+            var newData = new byte[count];
+            Array.Copy(data, startIndex, newData, 0, count);
+            //var newData = (byte[])data.Clone();
 
             for (var i = 0; i < newData.Length; i++)
             {
@@ -510,7 +734,7 @@
             /// <summary>
             /// starting value
             /// </summary>
-            None = 2,
+            None = 2
         }
 
         [Flags]
