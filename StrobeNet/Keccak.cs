@@ -37,22 +37,43 @@
 
         internal static ulong[] TransformArray(byte[] input)
         {
-            var result = new ulong[input.Length / 8];
-            for (int i = 0; i < input.Length; i+=8)
+            var result = new ulong[25];
+            unsafe
             {
-                result[i / 8] = BitConverter.ToUInt64(input, i);
+                fixed (byte* src = input)
+                {
+                    fixed (ulong* dst = result)
+                    {
+                        byte* pl = (byte*)dst;
+                        for (int i = 0; i < input.Length; i++)
+                        {
+                            *(pl + i) = *(src + i);
+                        }
+                    }
+                }
             }
+
             return result;
         }
 
         internal static byte[] TransformArrayBack(ulong[] input)
         {
-            var result = new byte[input.Length * 8];
-            for (int i = 0; i < input.Length; i++)
+            var result = new byte[200];
+            unsafe
             {
-                var bytes = BitConverter.GetBytes(input[i]);
-                Array.Copy(bytes, 0, result, i * 8, bytes.Length);
+                fixed (ulong* src = input)
+                {
+                    fixed (byte* dst = result)
+                    {
+                        ulong* pl = (ulong*)dst;
+                        for (int i = 0; i < input.Length; i++)
+                        {
+                            *(pl + i) = *(src + i);
+                        }
+                    }
+                }
             }
+
             return result;
         }
 
