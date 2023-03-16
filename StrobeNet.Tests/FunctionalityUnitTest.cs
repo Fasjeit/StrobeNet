@@ -1,13 +1,11 @@
 namespace StrobeNet.Tests
 {
-    using System;
-    using System.Linq;
-    using System.Text;
-
     using StrobeNet;
     using StrobeNet.Enums;
     using StrobeNet.Extensions;
-
+    using System;
+    using System.Linq;
+    using System.Text;
     using Xunit;
 
     public class FunctionalityUnitTest
@@ -183,28 +181,28 @@ namespace StrobeNet.Tests
             var aeadIndex = 2;
 
             var aead = s1.SendAead(
-                data, 
-                dataIndex, 
-                dataCount, 
-                data, 
-                adIndex, 
+                data,
+                dataIndex,
+                dataCount,
+                data,
+                adIndex,
                 adCount);
 
             var paddedAead = new byte[aead.Length + aeadIndex + 1];
             aead.CopyTo(paddedAead.AsSpan(aeadIndex));
 
             var aeadResult = s2.RecvAead(
-                paddedAead, 
-                aeadIndex, 
-                aead.Length, 
-                data, 
-                adIndex, 
-                adCount, 
+                paddedAead,
+                aeadIndex,
+                aead.Length,
+                data,
+                adIndex,
+                adCount,
                 out var plaintext);
 
             Assert.True(aeadResult);
             Assert.Equal(data.AsSpan(dataIndex, dataCount).ToArray(), plaintext.ToArray());
-        }        
+        }
 
         [Fact]
         public void TestAeadRoundTripSpan()

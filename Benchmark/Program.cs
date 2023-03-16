@@ -1,12 +1,11 @@
 ﻿namespace Benchmark
 {
-    using System;
-    using System.Runtime.InteropServices;
-    using System.Security.Cryptography;
-
     using BenchmarkDotNet.Attributes;
     using BenchmarkDotNet.Running;
     using StrobeNet;
+    using System;
+    using System.Runtime.InteropServices;
+    using System.Security.Cryptography;
 
     [RPlotExporter, RankColumn]
     public class TheEasiestBenchmark
@@ -39,7 +38,7 @@
         }
 
         [Benchmark(Description = "UnsafeByteToUint")]
-        public unsafe void  UnsafeByteToUint()
+        public unsafe void UnsafeByteToUint()
         {
             unsafe
             {
@@ -151,9 +150,9 @@
         }
     }
 
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             BenchmarkRunner.Run<StrobeBenchmark>();
         }

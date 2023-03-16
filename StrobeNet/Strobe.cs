@@ -1,12 +1,11 @@
 ﻿namespace StrobeNet
 {
+    using StrobeNet.Enums;
+    using StrobeNet.Extensions;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
-
-    using StrobeNet.Enums;
-    using StrobeNet.Extensions;
 
     /// <summary>
     /// Strobe instance
@@ -123,7 +122,10 @@
         {
             var result = new Strobe(this.strobeR)
             {
-                curFlags = this.curFlags, i0 = this.i0, pos = this.pos, posBegin = this.posBegin
+                curFlags = this.curFlags,
+                i0 = this.i0,
+                pos = this.pos,
+                posBegin = this.posBegin
             };
             Array.Copy(this.state, 0, result.state, 0, this.state.Length);
             return result;
@@ -717,10 +719,10 @@
             bool more)
         {
             return this.Operate(
-                meta, 
-                operation, 
-                dataConst.AsSpan(startIndex, count), 
-                length, 
+                meta,
+                operation,
+                dataConst.AsSpan(startIndex, count),
+                length,
                 more).ToArray();
         }
 

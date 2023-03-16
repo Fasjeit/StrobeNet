@@ -1,14 +1,11 @@
 ﻿namespace StrobeNet.Tests
 {
-    using System;
-    using System.IO;
-
     using Newtonsoft.Json;
     using Newtonsoft.Json.Serialization;
-
     using StrobeNet;
     using StrobeNet.Extensions;
-
+    using System;
+    using System.IO;
     using Xunit;
 
     public class VectorsTest
