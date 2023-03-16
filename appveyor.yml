@@ -1,6 +1,6 @@
 version: '0.0.3.1.{build}'
 image:
-  - Visual Studio 2019
+  - Visual Studio 2022
   - Ubuntu
 branches:
   only:
