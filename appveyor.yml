@@ -24,7 +24,7 @@ after_build:
 clone_depth: 1
 test_script:
   # restore packages and run
-  dotnet test ./StrobeNet.Tests/StrobeNet.Tests.csproj -c Release -f netcoreapp2.0
+  dotnet test ./StrobeNet.Tests/StrobeNet.Tests.csproj -c Release -f net6.0
 on_finish :
   # any cleanup in here
 deploy: off
