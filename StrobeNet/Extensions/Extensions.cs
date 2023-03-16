@@ -2,6 +2,7 @@
 {
     using System;
     using System.Linq;
+    using System.Runtime.CompilerServices;
 
     /// <summary>
     /// Array convert extensions
@@ -19,12 +20,30 @@
         }
 
         /// <summary>
+        /// Converts hex string to <see cref="Span{T}"/>
+        /// </summary>
+        /// <param name="hex">String to decode</param>
+        public static Span<byte> ToSpan(this string hex)
+        {
+            return hex.ToByteArray().AsSpan();
+        }
+
+        /// <summary>
         /// Convers byte array to hex string
         /// </summary>
         /// <param name="array">Array to endoce</param>
         public static string ToHexString(this byte[] array)
         {
             return BitConverter.ToString(array).Replace("-", "");
+        }
+
+        /// <summary>
+        /// Convers <see cref="Span{T}"/> to hex string
+        /// </summary>
+        /// <param name="array">Array to endoce</param>
+        public static string ToHexString(this Span<byte> array)
+        {
+            return array.ToArray().ToHexString();
         }
     }
 }

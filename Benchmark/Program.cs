@@ -6,6 +6,7 @@
 
     using BenchmarkDotNet.Attributes;
     using BenchmarkDotNet.Running;
+    using StrobeNet;
 
     [RPlotExporter, RankColumn]
     public class TheEasiestBenchmark
@@ -103,13 +104,58 @@
         }
     }
 
+    [RPlotExporter, RankColumn]
+    public class StrobeBenchmark
+    {
+        //[Params(64, 128, 256, 512, 1024, 4094, 1048576)]
+        //public int N;
 
+        private byte[] bytearray;
+
+        [Benchmark(Description = "NewOldByte")]
+        public void OldByte()
+        {
+            // Create strobe object, setting init string and security
+            var strobe = new Strobe("MyStrobe", 128);
+            var s2 = strobe.Clone() as Strobe;
+
+            var aead = strobe.SendAead(this.bytearray, this.bytearray);
+            var aead2 = s2.RecvAead(aead, this.bytearray, out var plaintext);
+        }
+
+        [Benchmark(Description = "NewSpan")]
+        public void NewSpan()
+        {
+            // Create strobe object, setting init string and security
+            var s1 = new Strobe("MyStrobe", 128);
+            var s2 = s1.Clone() as Strobe;
+
+            var data = this.bytearray.AsSpan();
+
+            var aead = s1.SendAead(data, data);
+            var aead2 = s2.RecvAead(aead, data, out var plaintext);
+        }
+
+        [GlobalCleanup]
+        public void cleanUp()
+        {
+        }
+
+        [GlobalSetup]
+        public void Setup()
+        {
+            this.bytearray = new byte[200];
+
+            var rng = new RNGCryptoServiceProvider();
+            rng.GetBytes(this.bytearray);
+        }
+    }
 
     class Program
     {
         static void Main(string[] args)
         {
-            BenchmarkRunner.Run<TheEasiestBenchmark>();
+            BenchmarkRunner.Run<StrobeBenchmark>();
         }
     }
 }

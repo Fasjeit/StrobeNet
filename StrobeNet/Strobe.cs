@@ -156,6 +156,18 @@
         }
 
         /// <summary>
+        /// Insert a key into the state.
+        /// Provides forward secrecy.
+        /// </summary>
+        /// <param name="key">
+        /// Key to be added
+        /// </param>
+        public void Key(Span<byte> key)
+        {
+            this.Operate(false, Operation.Key, key, 0, false);
+        }
+
+        /// <summary>
         /// PRF provides a hash of all previous operations.
         /// It can also be used to generate random numbers, it is forward secure.
         /// </summary>
@@ -204,6 +216,21 @@
         }
 
         /// <summary>
+        /// Encrypt plaintext.
+        /// Should be followed by SendMac in order to protect its integrity
+        /// </summary>
+        /// <param name="meta">
+        /// Framing data.
+        /// </param>
+        /// <param name="plaintext">
+        /// Plaintext to be encrypted
+        /// </param>
+        public Span<byte> SendEncUnauthenticated(bool meta, Span<byte> plaintext)
+        {
+            return this.Operate(meta, Operation.SendEnc, plaintext, 0, false);
+        }
+
+        /// <summary>
         /// Decrypt some received ciphertext.
         /// it should be followed by RecvMac in order to protect its integrity
         /// </summary>
@@ -240,6 +267,21 @@
         }
 
         /// <summary>
+        /// Decrypt some received ciphertext.
+        /// it should be followed by RecvMac in order to protect its integrity
+        /// </summary>
+        /// <param name="meta">
+        /// Framing data.
+        /// </param>
+        /// <param name="ciphertext">
+        /// Ciphertext to be decrypted
+        /// </param>
+        public Span<byte> RecvEncUnauthenticated(bool meta, Span<byte> ciphertext)
+        {
+            return this.Operate(meta, Operation.RecvEnc, ciphertext, 0, false);
+        }
+
+        /// <summary>
         /// Authenticate Additional Data.
         /// Should be followed by a SendMAc or RecvMac in order to truly work
         /// </summary>
@@ -256,7 +298,7 @@
 
         /// <summary>
         /// Authenticate Additional Data.
-        /// Should be followed by a SendMAc or RecvMac in order to truly work
+        /// Should be followed by a SendMac or RecvMac in order to truly work
         /// </summary>
         /// <param name="meta">
         /// Framing data.
@@ -273,6 +315,21 @@
         public void Ad(bool meta, byte[] additionalData, int startIndex, int count)
         {
             this.Operate(meta, Operation.Ad, additionalData, startIndex, count, 0, false);
+        }
+
+        /// <summary>
+        /// Authenticate Additional Data.
+        /// Should be followed by a SendMAc or RecvMac in order to truly work
+        /// </summary>
+        /// <param name="meta">
+        /// Framing data.
+        /// </param>
+        /// <param name="additionalData">
+        /// Data to authenticate
+        /// </param>
+        public void Ad(bool meta, Span<byte> additionalData)
+        {
+            this.Operate(meta, Operation.Ad, additionalData, 0, false);
         }
 
         /// <summary>
@@ -310,6 +367,20 @@
         }
 
         /// <summary>
+        /// Send data in cleartext
+        /// </summary>
+        /// <param name="meta">
+        /// Framing data.
+        /// </param>
+        /// <param name="cleartext">
+        /// Cleartext to send
+        /// </param>
+        public Span<byte> SendClr(bool meta, Span<byte> cleartext)
+        {
+            return this.Operate(meta, Operation.SendClr, cleartext, 0, false);
+        }
+
+        /// <summary>
         /// Receive data in cleartext
         /// </summary>
         /// <param name="meta">
@@ -341,6 +412,20 @@
         public byte[] RecvClr(bool meta, byte[] cleartext, int startIdex, int count)
         {
             return this.Operate(meta, Operation.RecvClr, cleartext, startIdex, count, 0, false);
+        }
+
+        /// <summary>
+        /// Receive data in cleartext
+        /// </summary>
+        /// <param name="meta">
+        /// Framing data.
+        /// </param>
+        /// <param name="cleartext">
+        /// Cleartext to send
+        /// </param>
+        public Span<byte> RecvClr(bool meta, Span<byte> cleartext)
+        {
+            return this.Operate(meta, Operation.RecvClr, cleartext, 0, false);
         }
 
         /// <summary>
@@ -392,6 +477,20 @@
         }
 
         /// <summary>
+        /// Verify a received authentication tag.
+        /// </summary>
+        /// <param name="meta">
+        /// Framing data.
+        /// </param>
+        /// <param name="mac">
+        /// Tag to verify
+        /// </param>
+        public bool RecvMac(bool meta, Span<byte> mac)
+        {
+            return this.Operate(meta, Operation.RecvMac, mac, 0, false)[0] == 0;
+        }
+
+        /// <summary>
         /// Introduce forward secrecy in a protocol.
         /// </summary>
         /// <param name="length">
@@ -434,7 +533,7 @@
         /// <param name="adStartIndex">
         /// Start index for reading from AD buffer
         /// </param>
-        /// <param name="adCOunt">
+        /// <param name="adCount">
         /// Number of AD bytes to read
         /// </param>
         public byte[] SendAead(
@@ -443,12 +542,55 @@
             int plaintextCount,
             byte[] ad,
             int adStartIndex,
-            int adCOunt)
+            int adCount)
         {
             var ciphertext = this.SendEncUnauthenticated(false, plaintext, plaintextStartIndex, plaintextCount);
-            this.Ad(false, ad, adStartIndex, adCOunt);
+            this.Ad(false, ad, adStartIndex, adCount);
             ciphertext = ciphertext.Concat(this.SendMac(false, MacLen)).ToArray();
             return ciphertext;
+        }
+
+        /// <summary>
+        /// Encrypt data and authenticate additional data
+        /// </summary>
+        /// <param name="plaintext">
+        /// Data to be encrypted and authenticated
+        /// </param>
+        /// <param name="ad">
+        /// Additional data to be authenticated
+        /// </param>
+        public Span<byte> SendAead(
+            Span<byte> plaintext,
+            Span<byte> ad)
+        {
+            var ciphertext = this.SendEncUnauthenticated(false, plaintext);
+            this.Ad(false, ad);
+            var mac = this.SendMac(false, MacLen);
+
+            var result = new byte[ciphertext.Length + mac.Length];
+            ciphertext.CopyTo(result.AsSpan());
+            mac.CopyTo(result.AsSpan(ciphertext.Length));
+
+            return result;
+        }
+
+        /// <summary>
+        /// Encrypt and authenticate data
+        /// </summary>
+        /// <param name="plaintext">
+        /// Data to be encrypted and authenticated
+        /// </param>
+        public Span<byte> SendAead(
+            Span<byte> plaintext)
+        {
+            var ciphertext = this.SendEncUnauthenticated(false, plaintext);
+            var mac = this.SendMac(false, MacLen);
+
+            var result = new byte[ciphertext.Length + mac.Length];
+            ciphertext.CopyTo(result.AsSpan());
+            mac.CopyTo(result.AsSpan(ciphertext.Length));
+
+            return result;
         }
 
         /// <summary>
@@ -503,6 +645,36 @@
             int adCount,
             out byte[] plaintext)
         {
+            if (ciphertextCount < MacLen)
+            {
+                plaintext = null;
+                return false;
+            }
+
+            var messageLength = ciphertextCount - MacLen;
+            plaintext = this.RecvEncUnauthenticated(false, ciphertext, ciphertextStartIndex, messageLength);
+            this.Ad(false, ad, adStartIndex, adCount);
+            return this.RecvMac(false, ciphertext, ciphertextStartIndex + messageLength, MacLen);
+        }
+
+        /// <summary>
+        /// Decrypt data and authenticate additional data
+        /// It is similar to AES-GCM.
+        /// </summary>
+        /// <param name="ciphertext">
+        /// Ciphertext to be verified and decrypted
+        /// </param>
+        /// <param name="ad">
+        /// Additional auth data to be verified
+        /// </param>
+        /// <param name="plaintext">
+        /// Resulting plaintext
+        /// </param>
+        public bool RecvAead(
+            Span<byte> ciphertext,
+            Span<byte> ad,
+            out Span<byte> plaintext)
+        {
             if (ciphertext.Length < MacLen)
             {
                 plaintext = null;
@@ -510,10 +682,10 @@
             }
 
             var messageLength = ciphertext.Length - MacLen;
-            plaintext = this.RecvEncUnauthenticated(false, ciphertext, 0, messageLength);
+            plaintext = this.RecvEncUnauthenticated(false, ciphertext.Slice(0, messageLength));
 
-            this.Ad(false, ad, adStartIndex, adCount);
-            return this.RecvMac(false, ciphertext, messageLength, MacLen);
+            this.Ad(false, ad);
+            return this.RecvMac(false, ciphertext.Slice(messageLength, MacLen));
         }
 
         /// <summary>
@@ -539,8 +711,30 @@
             bool meta,
             Operation operation,
             byte[] dataConst,
-            int starIndex,
+            int startIndex,
             int count,
+            int length,
+            bool more)
+        {
+            return this.Operate(
+                meta, 
+                operation, 
+                dataConst.AsSpan(startIndex, count), 
+                length, 
+                more).ToArray();
+        }
+
+        /// <summary>
+        /// Operate runs an operation
+        /// For operations that only require a length, provide the length via the
+        /// length argument. For other operations provide a zero length.
+        /// Result is always retrieved through the return value. For boolean results,
+        /// check that the first index is 0 for true, 1 for false.
+        /// </summary>
+        public Span<byte> Operate(
+            bool meta,
+            Operation operation,
+            Span<byte> dataConst,
             int length,
             bool more)
         {
@@ -557,7 +751,7 @@
             }
 
             // does the operation requires a length?
-            byte[] data;
+            Span<byte> data;
 
             if ((flags & (Flag.FlagI | Flag.FlagT)) != (Flag.FlagI | Flag.FlagT)
                 && (flags & (Flag.FlagI | Flag.FlagA)) != Flag.FlagA)
@@ -599,7 +793,7 @@
 
             // length should be zero for prf only, already checked this before
             // if len!=0 then just use input count
-            var processed = this.Duplex(data, starIndex, length == 0 ? count : length, cBefore, cAfter, false);
+            var processed = this.Duplex(data, length == 0 ? data.Length : length, cBefore, cAfter, false);
 
             if ((flags & (Flag.FlagI | Flag.FlagA)) == (Flag.FlagI | Flag.FlagA))
             {
@@ -653,16 +847,23 @@
 
         private byte[] Duplex(byte[] data, int startIndex, int count, bool cbefore, bool cafter, bool forceF)
         {
+            return this.Duplex(
+                data.AsSpan(startIndex),
+                count,
+                cbefore,
+                cafter,
+                forceF).ToArray();
+        }
+
+        private Span<byte> Duplex(Span<byte> data, int count, bool cbefore, bool cafter, bool forceF)
+        {
             if (cbefore && cafter)
             {
                 throw new Exception($"either {nameof(cbefore)} or {nameof(cafter)} should be set to false");
             }
 
-            // Copy data
             var newData = new byte[count];
-            Array.Copy(data, startIndex, newData, 0, count);
-            //var newData = (byte[])data.Clone();
-
+            data.Slice(0, count).CopyTo(newData);
             for (var i = 0; i < newData.Length; i++)
             {
                 // Process data block by block

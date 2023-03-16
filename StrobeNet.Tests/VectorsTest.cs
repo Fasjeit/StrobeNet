@@ -43,9 +43,21 @@
         }
 
         [Fact]
+        public void StreamingTestSpan()
+        {
+            this.RunTestVectorSpan("streaming tests");
+        }
+
+        [Fact]
         public void BoundaryTest()
         {
             this.RunTestVector("boundary tests");
+        }
+
+        [Fact]
+        public void BoundaryTestSpan()
+        {
+            this.RunTestVectorSpan("boundary tests");
         }
 
         [Fact]
@@ -55,9 +67,21 @@
         }
 
         [Fact]
+        public void MetaTestsSpan()
+        {
+            this.RunTestVectorSpan("meta tests");
+        }
+
+        [Fact]
         public void SimpleTests()
         {
             this.RunTestVector("simple tests");
+        }
+
+        [Fact]
+        public void SimpleTestsSpan()
+        {
+            this.RunTestVectorSpan("simple tests");
         }
 
         private void RunTestVector(string vectorName)
@@ -91,6 +115,57 @@
                     operation.Meta ?? false,
                     operation.GetStrobeOperation(),
                     operation.InputData?.ToByteArray(),
+                    operation.InputLength,
+                    operation.Stream ?? false);
+                if (!string.Equals(
+                        strobe.DebugPrintState(),
+                        operation.StateAfter,
+                        StringComparison.InvariantCultureIgnoreCase))
+                {
+                    throw new Exception();
+                }
+
+                if (operation.Output != null && !string.Equals(
+                        operation.Output,
+                        result.ToHexString(),
+                        StringComparison.InvariantCultureIgnoreCase))
+                {
+                    throw new Exception();
+                }
+            }
+        }
+
+        private void RunTestVectorSpan(string vectorName)
+        {
+            var vector = this.TestVectors.TestVectors.Find(tv => tv.Name == vectorName);
+
+            Strobe strobe = null;
+
+            foreach (var operation in vector.Operations)
+            {
+                if (operation.Name == "init")
+                {
+                    strobe = new Strobe(operation.CustomString, operation.Security);
+                    if (!string.Equals(
+                            strobe.DebugPrintState(),
+                            operation.StateAfter,
+                            StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        throw new Exception();
+                    }
+
+                    continue;
+                }
+
+                if (strobe == null)
+                {
+                    throw new ArgumentNullException(nameof(strobe));
+                }
+
+                var result = strobe.Operate(
+                    operation.Meta ?? false,
+                    operation.GetStrobeOperation(),
+                    operation.InputData != null ? operation.InputData.ToSpan() : Span<byte>.Empty,
                     operation.InputLength,
                     operation.Stream ?? false);
                 if (!string.Equals(
