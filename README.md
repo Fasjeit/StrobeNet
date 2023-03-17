@@ -8,9 +8,9 @@ This implementation is adaptation of [StrobeGo by Davin Wong](https://github.com
 
 ### Build and Test Status:
 
-| Linux build | Windows build |
-|:---:|:---:|
-| [![Travis CI build status](https://travis-ci.org/Fasjeit/StrobeNet.svg?branch=master)](https://travis-ci.org/Fasjeit/StrobeNet) | [![AppVeyor build status](https://ci.appveyor.com/api/projects/status/dxkj5bnbus3iq4so?svg=true)](https://ci.appveyor.com/project/Fasjeit/strobenet) |
+| Windows/Linux build |
+|:---:|
+[![AppVeyor build status](https://ci.appveyor.com/api/projects/status/dxkj5bnbus3iq4so?svg=true)](https://ci.appveyor.com/project/Fasjeit/strobenet) |
 
 ## Install
 
