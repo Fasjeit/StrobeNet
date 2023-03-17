@@ -27,16 +27,16 @@
         /// </summary>
         private readonly Dictionary<Operation, Flag> operationMap = new Dictionary<Operation, Flag>
         {
-            { Operation.Ad, Flag.FlagA },
-            { Operation.Key, Flag.FlagA | Flag.FlagC },
-            { Operation.Prf, Flag.FlagI | Flag.FlagA | Flag.FlagC },
-            { Operation.SendClr, Flag.FlagA | Flag.FlagT },
-            { Operation.RecvClr, Flag.FlagI | Flag.FlagA | Flag.FlagT },
-            { Operation.SendEnc, Flag.FlagA | Flag.FlagC | Flag.FlagT },
-            { Operation.RecvEnc, Flag.FlagI | Flag.FlagA | Flag.FlagC | Flag.FlagT },
-            { Operation.SendMac, Flag.FlagC | Flag.FlagT },
-            { Operation.RecvMac, Flag.FlagI | Flag.FlagC | Flag.FlagT },
-            { Operation.Ratchet, Flag.FlagC }
+            { Operation.Ad, Flag.A },
+            { Operation.Key, Flag.A | Flag.C },
+            { Operation.Prf, Flag.I | Flag.A | Flag.C },
+            { Operation.SendClr, Flag.A | Flag.T },
+            { Operation.RecvClr, Flag.I | Flag.A | Flag.T },
+            { Operation.SendEnc, Flag.A | Flag.C | Flag.T },
+            { Operation.RecvEnc, Flag.I | Flag.A | Flag.C | Flag.T },
+            { Operation.SendMac, Flag.C | Flag.T },
+            { Operation.RecvMac, Flag.I | Flag.C | Flag.T },
+            { Operation.Ratchet, Flag.C }
         };
 
         /// <summary>
@@ -733,6 +733,24 @@
         /// Result is always retrieved through the return value. For boolean results,
         /// check that the first index is 0 for true, 1 for false.
         /// </summary>
+        /// <remarks>
+        /// If metadata is not None, first apply the given metadata in the given
+        /// meta_op.STROBE operations are streamable.If more is true, this operation
+        /// continues the previous operation.It therefore ignores metadata and
+        /// doesn't use the beginOp code from the paper.
+        /// 
+        /// Certain operations return data.  If an operation returns no data
+        /// (for example, AD and KEY don't return any data), it returns the empty
+        /// byte array.
+        /// 
+        /// The meta-operation might also return data.  This is convenient for
+        /// explicit framing (meta_op = 0b11010/0b11011) or encrypted explicit
+        /// framing (meta_op = 0b11110/0b11111)
+        /// 
+        /// If the operation is a MAC verification, this function returns the
+        /// empty byte array (plus any metadata returned) on success, and non-zero
+        /// value on failure.
+        /// </remarks>
         public Span<byte> Operate(
             bool meta,
             Operation operation,
@@ -749,14 +767,14 @@
             // operation is meta?
             if (meta)
             {
-                flags |= Flag.FlagM;
+                flags |= Flag.M;
             }
 
             // does the operation requires a length?
             Span<byte> data;
 
-            if ((flags & (Flag.FlagI | Flag.FlagT)) != (Flag.FlagI | Flag.FlagT)
-                && (flags & (Flag.FlagI | Flag.FlagA)) != Flag.FlagA)
+            if ((flags & (Flag.I | Flag.T)) != (Flag.I | Flag.T)
+                && (flags & (Flag.I | Flag.A)) != Flag.A)
             {
                 if (length == 0)
                 {
@@ -769,7 +787,9 @@
             {
                 if (length != 0)
                 {
-                    throw new Exception("Output length must be zero except for PRF, SendMac and RATCHET operations");
+                    throw new Exception(
+                        "Output length must be zero except for PRF, " +
+                        "SendMac and RATCHET operations");
                 }
 
                 data = dataConst;
@@ -790,25 +810,25 @@
 
             // Operation
 
-            var cAfter = (flags & (Flag.FlagC | Flag.FlagI | Flag.FlagT)) == (Flag.FlagC | Flag.FlagT);
-            var cBefore = (flags & Flag.FlagC) != 0 && !cAfter;
+            var cAfter = (flags & (Flag.C | Flag.I | Flag.T)) == (Flag.C | Flag.T);
+            var cBefore = (flags & Flag.C) != 0 && !cAfter;
 
             // length should be zero for prf only, already checked this before
             // if len!=0 then just use input count
             var processed = this.Duplex(data, length == 0 ? data.Length : length, cBefore, cAfter, false);
 
-            if ((flags & (Flag.FlagI | Flag.FlagA)) == (Flag.FlagI | Flag.FlagA))
+            if ((flags & (Flag.I | Flag.A)) == (Flag.I | Flag.A))
             {
                 return processed;
             }
 
-            if ((flags & (Flag.FlagI | Flag.FlagT)) == Flag.FlagT)
+            if ((flags & (Flag.I | Flag.T)) == Flag.T)
             {
                 // Return data for the transport.
                 return processed;
             }
 
-            if ((flags & (Flag.FlagI | Flag.FlagA | Flag.FlagT)) == (Flag.FlagI | Flag.FlagT))
+            if ((flags & (Flag.I | Flag.A | Flag.T)) == (Flag.I | Flag.T))
             {
                 // Check MAC: all output bytes must be 0
                 if (more)
@@ -823,17 +843,17 @@
             }
 
             // Operation has no output
-            return null;
+            return Span<byte>.Empty;
         }
 
         // beginOp: starts an operation
         private void BeginOp(Flag flags)
         {
-            if ((flags & Flag.FlagT) != 0)
+            if ((flags & Flag.T) != 0)
             {
                 if (this.i0 == Role.None)
                 {
-                    this.i0 = (Role)(flags & Flag.FlagI);
+                    this.i0 = (Role)(flags & Flag.I);
                 }
 
                 flags ^= (Flag)this.i0;
@@ -841,7 +861,7 @@
 
             var oldBegin = this.posBegin;
             this.posBegin = (byte)(this.pos + 1);
-            var forceF = (flags & (Flag.FlagC | Flag.FlagK)) != 0;
+            var forceF = (flags & (Flag.C | Flag.K)) != 0;
             var data = new[] { oldBegin, (byte)flags };
 
             this.Duplex(data, 0, data.Length, false, false, forceF);
@@ -943,17 +963,12 @@
         [Flags]
         private enum Flag
         {
-            FlagI = 1,
-
-            FlagA = 2,
-
-            FlagC = 4,
-
-            FlagT = 8,
-
-            FlagM = 16,
-
-            FlagK = 32
+            I = 1,
+            A = 2,
+            C = 4,
+            T = 8,
+            M = 16,
+            K = 32
         }
     }
 }
