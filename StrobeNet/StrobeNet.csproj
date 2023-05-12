@@ -11,7 +11,7 @@
     <AssemblyVersion>0.0.3.1</AssemblyVersion>
     <FileVersion>0.0.3.1</FileVersion>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
-    <PackageIcon>icons8-vertical-reflection-78.png</PackageIcon>
+    <PackageIcon>icons8-led-strobe-64.png</PackageIcon>
     <PackageReadmeFile>Readme.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/Fasjeit/StrobeNet</RepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -26,15 +26,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\DynamicReflector\ico\icons8-vertical-reflection-78.png">
+    <None Include="..\\ico\icons8-led-strobe-64.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
-    <None Include="..\..\DynamicReflector\LICENSE">
+    <None Include="..\\LICENSE">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
-    <None Include="..\..\DynamicReflector\Readme.md">
+    <None Include="..\\Readme.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
